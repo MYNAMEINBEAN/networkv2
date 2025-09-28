@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Network Inspector</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input { width: 300px; padding: 5px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Network Inspector</h1>
+  <input id="url" placeholder="Enter URL">
+  <button onclick="inspect()">Inspect</button>
+  <pre id="error" style="color:red"></pre>
+  <table id="results"></table>
+
+  <script>
+    async function inspect() {
+      document.getElementById("results").innerHTML = "";
+      document.getElementById("error").textContent = "";
+      let url = document.getElementById("url").value;
+      try {
+        let res = await fetch("/inspect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+        let data = await res.json();
+        if (data.error) {
+          document.getElementById("error").textContent = data.error;
+          return;
+        }
+        let table = "<tr><th>URL</th><th>Status</th><th>Size</th><th>Type</th></tr>";
+        for (let r of data.results) {
+          table += `<tr>
+            <td>${r.url}</td>
+            <td>${r.status || "-"}</td>
+            <td>${r.size || "-"}</td>
+            <td>${r.type || r.error || "-"}</td>
+          </tr>`;
+        }
+        document.getElementById("results").innerHTML = table;
+      } catch (e) {
+        document.getElementById("error").textContent = e;
+      }
+    }
+  </script>
+</body>
+</html>
